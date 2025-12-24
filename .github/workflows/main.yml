@@ -1,0 +1,41 @@
+name: Build Trafexia Windows App
+
+# Chạy khi có code push lên nhánh main hoặc có thể kích hoạt thủ công
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      # 1. Tải mã nguồn về máy chủ ảo
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Cài đặt Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Hoặc phiên bản node bạn đang dùng
+          cache: 'npm'
+
+      # 3. Cài đặt các thư viện (dependencies)
+      - name: Install Dependencies
+        run: npm install
+
+      # 4. Chạy lệnh build exe (Dựa trên script "build:win" trong package.json)
+      - name: Build Windows Exe
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Cần thiết để electron-builder publish (nếu có cấu hình)
+
+      # 5. Lưu file exe thành phẩm để tải về
+      # Thư mục 'release' được lấy từ cấu hình trong electron-builder.json5
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Trafexia-Windows-Setup
+          path: release/*.exe
